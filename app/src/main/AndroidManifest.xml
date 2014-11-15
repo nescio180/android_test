@@ -2,11 +2,13 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="de.nescio.androidbottest" >
 
+    <uses-permission android:name="android.permission.INJECT_EVENTS"/>
+
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/AppTheme" >
+        android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen" >
         <activity
             android:name="de.nescio.androidbot_test.MainActivity"
             android:label="@string/app_name" >
@@ -16,6 +18,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <service
+            android:name="de.nescio.androidbot_test.OverlayShowingService"
+            android:exported="false" />
     </application>
 
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
 </manifest>

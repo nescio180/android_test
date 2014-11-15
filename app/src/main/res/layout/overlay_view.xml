@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/overlay_main"
+    android:orientation="horizontal"
+    android:background="@drawable/overlay_background_both_corners_rounded"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+
+    <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+        android:orientation="vertical"
+        android:background="@drawable/overlay_background"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+        <Button
+            android:id="@+id/overlay_button_play"
+            android:text="Play"
+            android:background="@android:color/transparent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <Button
+            android:id="@+id/overlay_button_rec"
+            android:text="rec"
+            android:background="@android:color/transparent"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+    </LinearLayout>
+
+    <Button
+        android:id="@+id/overlay_button_exit"
+        android:text="X"
+        android:layout_gravity="top"
+        android:gravity="center"
+        android:background="@drawable/overlay_background_btn_exit"
+        android:layout_width="36dp"
+        android:layout_height="36dp" />
+
+</LinearLayout>

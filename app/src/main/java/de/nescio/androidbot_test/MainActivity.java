@@ -1,44 +1,31 @@
 package de.nescio.androidbot_test;
 
 import android.app.Activity;
+import android.app.Instrumentation;
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
+import android.os.SystemClock;
+import android.view.MotionEvent;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import de.nescio.androidbottest.R;
 
 
-public class MainActivity extends Activity implements View.OnClickListener {
-
-    private Button mInjectButton;
-    private TextView mTextView;
+public class MainActivity extends Activity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
 
-        mInjectButton = (Button) findViewById(R.id.inject_btn);
-        mInjectButton.setOnClickListener(this);
-
-        mTextView = (TextView) findViewById(R.id.text_view);
-
-    }
-
-    public void startEventInject() {
-        mTextView.requestFocus();
-        final Thread t = new Thread() {
-            public void run() {
-            }
-        };
-        t.start();
-    }
-
-    @Override
-    public void onClick(View view) {
-        if (view == mInjectButton) {
-            startEventInject();
-        }
+        super.onCreate(savedInstanceState);
+        Intent svc = new Intent(this, OverlayShowingService.class);
+        startService(svc);
+        finish();
     }
 }
