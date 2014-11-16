@@ -15,7 +15,7 @@
 
         <Button
             android:id="@+id/overlay_button_play"
-            android:text="start"
+            android:text="sTart"
             android:shadowColor="@color/green_transparent"
             android:shadowDx="0"
             android:shadowDy="0"
