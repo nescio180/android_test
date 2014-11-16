@@ -5,9 +5,12 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.graphics.PixelFormat;
 import android.os.Environment;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.SystemClock;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -17,12 +20,14 @@ import android.view.View.OnClickListener;
 import android.view.WindowManager;
 import android.view.WindowManager.LayoutParams;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 import de.nescio.androidbot_test.utils.BitmapUtil;
@@ -37,7 +42,7 @@ public class OverlayShowingService extends Service implements View.OnTouchListen
     private Button mButtonRec, mButtonPlay, mButtonExit;
     private View topLeftView;
     private View mMainView;
-    private ImageView mTouchableView;
+    private FrameLayout mTouchableView;
     private float offsetX;
     private float offsetY;
     private int originalXPos;
@@ -69,7 +74,7 @@ public class OverlayShowingService extends Service implements View.OnTouchListen
         mButtonExit.setOnClickListener(this);
         mButtonRec.setOnClickListener(this);
 
-        mTouchableView = new ImageView(this);
+        mTouchableView = new FrameLayout(this);
         mTouchableView.setVisibility(View.INVISIBLE);
         mTouchableView.setOnTouchListener(new View.OnTouchListener() {
             @Override
@@ -85,20 +90,20 @@ public class OverlayShowingService extends Service implements View.OnTouchListen
             }
         });
 
-        WindowManager.LayoutParams touchableParams = new WindowManager.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.TYPE_SYSTEM_ALERT, WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL, PixelFormat.TRANSLUCENT);
+        WindowManager.LayoutParams touchableParams = new WindowManager.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.TYPE_SYSTEM_ALERT, WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL| LayoutParams.FLAG_LAYOUT_IN_SCREEN, PixelFormat.TRANSLUCENT);
         touchableParams.gravity = Gravity.LEFT | Gravity.TOP;
         touchableParams.x = 0;
         touchableParams.y = 0;
         mWindowManager.addView(mTouchableView, touchableParams);
 
-        WindowManager.LayoutParams params = new WindowManager.LayoutParams(WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.TYPE_SYSTEM_ALERT, WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL, PixelFormat.TRANSLUCENT);
+        WindowManager.LayoutParams params = new WindowManager.LayoutParams(WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.TYPE_SYSTEM_ALERT, WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL| LayoutParams.FLAG_LAYOUT_IN_SCREEN, PixelFormat.TRANSLUCENT);
         params.gravity = Gravity.LEFT | Gravity.TOP;
         params.x = 0;
         params.y = 0;
         mWindowManager.addView(mMainView, params);
 
         topLeftView = new View(this);
-        WindowManager.LayoutParams topLeftParams = new WindowManager.LayoutParams(WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.TYPE_SYSTEM_ALERT, WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL, PixelFormat.TRANSLUCENT);
+        WindowManager.LayoutParams topLeftParams = new WindowManager.LayoutParams(WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.TYPE_SYSTEM_ALERT, WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL| LayoutParams.FLAG_LAYOUT_IN_SCREEN, PixelFormat.TRANSLUCENT);
         topLeftParams.gravity = Gravity.LEFT | Gravity.TOP;
         topLeftParams.x = 0;
         topLeftParams.y = 0;
@@ -163,8 +168,8 @@ public class OverlayShowingService extends Service implements View.OnTouchListen
         if (_enabled) {
             mRecordTouch = false;
             mTouchableView.setVisibility(View.INVISIBLE);
+            injectTouch(mClickList);
         } else {
-            mClickList.clear();
             mRecordTouch = true;
             mTouchableView.setVisibility(View.VISIBLE);
         }
@@ -180,7 +185,7 @@ public class OverlayShowingService extends Service implements View.OnTouchListen
         if (_view == mButtonRec) {
             toggleRecording();
         } else if (_view == mButtonPlay) {
-            injectTouch();
+            scanScreen();
         } else if (_view == mButtonExit) {
             this.stopSelf();
         }
@@ -203,40 +208,85 @@ public class OverlayShowingService extends Service implements View.OnTouchListen
 
     }
 
-    private void injectTouch() {
-//        Thread task = new Thread(new Runnable() {
-//            private Handler handler;
-//
-//            @Override
-//            public void run() {
-//                Looper.prepare();
-//                handler = new Handler();
-//                handler.postDelayed(new Runnable() {
-//                    @Override
-//                    public void run() {
-//                        if (mClickList != null) {
-//                            if (!mClickList.isEmpty()) {
-//                                for (int i = 0; i < mClickList.size(); i++) {
-//                                    Point p = mClickList.get(i);
-//                                    doClick(p.x, p.y);
-//                                    try {
-//                                        Thread.sleep(300);
-//                                    } catch (InterruptedException e) {
-//                                        e.printStackTrace();
-//                                    }
-//                                }
-//                            }
-//                        }
-//                    }
-//                }, 100);
-//                Looper.loop();
-//            }
-//        });
-//        task.start();
+    private void injectTouch(final ArrayList<Point> points) {
+        Thread task = new Thread(new Runnable() {
+            private Handler handler;
+
+            @Override
+            public void run() {
+                Looper.prepare();
+                handler = new Handler();
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (points != null) {
+                            if (!points.isEmpty()) {
+                                for (int i = 0; i < points.size(); i++) {
+                                    Point p = points.get(i);
+                                    doClick(p.x, p.y);
+                                    try {
+                                        Thread.sleep(50);
+                                    } catch (InterruptedException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }, 100);
+                Looper.loop();
+            }
+        });
+        task.start();
     }
 
-    private void takeScreenshot() {
-        BitmapUtil.getInstance().takeScreenShot();
+    public void scanScreen() {
+        ArrayList<Point> points = new ArrayList<Point>();
+        Bitmap screen = BitmapUtil.getScreenBitmap();
+        int pixel[] = BitmapUtil.getBitmapPixel(screen);
+        for (int i = 0; i < pixel.length; i++) {
+            int currentPixel = pixel[i];
+            int redValue = Color.red(currentPixel);
+            int blueValue = Color.blue(currentPixel);
+            int greenValue = Color.green(currentPixel);
+            if (redValue >= 230 && redValue <= 250 &&
+                    greenValue >= 220 && greenValue <= 240 &&
+                    blueValue >= 70 && blueValue <= 90) {
+                points.add(pixelToPoint(currentPixel, screen, pixel.length, i));
+            }
+        }
+
+        mTouchableView.removeAllViews();
+
+        for (Point p : points) {
+            ImageView v = new ImageView(this);
+            v.setLayoutParams(new FrameLayout.LayoutParams(10, 10));
+            v.setBackgroundColor(Color.CYAN);
+            v.setX(p.x);
+            v.setY(p.y);
+            mTouchableView.addView(v);
+        }
+
+        mClickList = refinedPoints(points);
+    }
+
+    private ArrayList<Point> refinedPoints(ArrayList<Point> points) {
+        ArrayList<Point> newPoints = new ArrayList<Point>();
+        
+
+        return null;
+    }
+
+    private Point pixelToPoint(int pixel, Bitmap b, int pixelCount, int position) {
+        int width = b.getWidth();
+        int height = b.getHeight();
+
+        // TODO
+        int x = (height - position / width);
+        int y = (position % width);
+
+        Point p = new Point(x, y);
+        return p;
     }
 
     private void doClick(int _x, int _y) {
