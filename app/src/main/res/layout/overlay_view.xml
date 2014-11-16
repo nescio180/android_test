@@ -15,45 +15,76 @@
 
         <Button
             android:id="@+id/overlay_button_play"
-            android:text="play"
+            android:text="start"
             android:shadowColor="@color/green_transparent"
             android:shadowDx="0"
             android:shadowDy="0"
             android:textSize="12sp"
             android:shadowRadius="8"
+            android:minHeight="0dp"
+            android:minWidth="80dp"
+            android:padding="5dp"
+            android:layout_gravity="center"
             android:textColor="@color/green_transparent"
-            android:background="@android:color/transparent"
+            android:background="@drawable/button_selector"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
 
         <Button
-            android:id="@+id/overlay_button_rec"
-            android:text="record"
+            android:id="@+id/overlay_button_scan"
+            android:text="scan"
+            android:minWidth="80dp"
+            android:padding="5dp"
+            android:layout_gravity="center"
             android:textColor="@color/green_transparent"
             android:shadowColor="@color/green_transparent"
             android:shadowDx="0"
             android:textSize="12sp"
             android:shadowDy="0"
             android:shadowRadius="8"
-            android:background="@android:color/transparent"
+            android:minHeight="0dp"
+            android:background="@drawable/button_selector"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <Button
+            android:id="@+id/overlay_button_toggle"
+            android:text="toggle"
+            android:textColor="@color/green_transparent"
+            android:shadowColor="@color/green_transparent"
+            android:shadowDx="0"
+            android:textSize="12sp"
+            android:shadowDy="0"
+            android:shadowRadius="8"
+            android:minHeight="0dp"
+            android:minWidth="80dp"
+            android:padding="5dp"
+            android:layout_gravity="center"
+            android:background="@drawable/button_selector"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <Button
+            android:id="@+id/overlay_button_exit"
+            android:text="eXit"
+            android:textSize="12sp"
+            android:gravity="center"
+            android:textColor="@color/green_transparent"
+            android:shadowColor="@color/green_transparent"
+            android:shadowDx="0"
+            android:shadowDy="0"
+            android:shadowRadius="8"
+            android:minHeight="0dp"
+            android:minWidth="80dp"
+            android:padding="5dp"
+            android:layout_gravity="center"
+            android:background="@drawable/button_selector"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
     </LinearLayout>
-
-    <Button
-        android:id="@+id/overlay_button_exit"
-        android:text="X"
-        android:textSize="12sp"
-        android:padding="4dp"
-        android:layout_gravity="top"
-        android:gravity="center"
-        android:textColor="@color/green_transparent"
-        android:shadowColor="@color/green_transparent"
-        android:shadowDx="0"
-        android:shadowDy="0"
-        android:shadowRadius="8"
-        android:background="@drawable/overlay_background_btn_exit"
-        android:layout_width="24dp"
-        android:layout_height="24dp" />
-
+    
+    <ImageView
+        android:layout_width="20dp"
+        android:layout_height="fill_parent" />
+    
 </LinearLayout>

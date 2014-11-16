@@ -2,6 +2,7 @@ package de.nescio.androidbot_test.utils;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 
 import java.io.IOException;
 import java.io.OutputStream;
@@ -54,5 +55,14 @@ public class BitmapUtil {
         b.getPixels(pixel, 0, b.getWidth(), 0, 0,
                 b.getWidth(), b.getHeight());
         return pixel;
+    }
+
+    public static boolean isAboutSameColor(int pixel, int red, int green, int blue, int tolerance) {
+        int redValue = Color.red(pixel);
+        int blueValue = Color.blue(pixel);
+        int greenValue = Color.green(pixel);
+        return (redValue >= red - (tolerance / 2) && redValue <= red + (tolerance / 2) &&
+                greenValue >= green - (tolerance / 2) && greenValue <= green + (tolerance / 2) &&
+                blueValue >= blue - (tolerance / 2) && blueValue <= blue + (tolerance / 2));
     }
 }

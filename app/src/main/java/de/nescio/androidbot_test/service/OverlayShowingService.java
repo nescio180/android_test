@@ -27,7 +27,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 import de.nescio.androidbot_test.utils.BitmapUtil;
@@ -39,16 +38,16 @@ import de.nescio.androidbottest.R;
  */
 public class OverlayShowingService extends Service implements View.OnTouchListener, OnClickListener {
     private WindowManager mWindowManager;
-    private Button mButtonRec, mButtonPlay, mButtonExit;
+    private Button mButtonToggle, mButtonPlay, mButtonExit, mButtonScan;
     private View topLeftView;
     private View mMainView;
-    private FrameLayout mTouchableView;
+    private FrameLayout mVisualizerView;
     private float offsetX;
     private float offsetY;
     private int originalXPos;
     private int originalYPos;
     private boolean moving;
-    private boolean mRecordTouch;
+    private boolean mVisualize;
     private volatile ArrayList<Point> mClickList = new ArrayList<Point>();
 
     @Override
@@ -68,42 +67,40 @@ public class OverlayShowingService extends Service implements View.OnTouchListen
 
         mButtonPlay = (Button) mMainView.findViewById(R.id.overlay_button_play);
         mButtonExit = (Button) mMainView.findViewById(R.id.overlay_button_exit);
-        mButtonRec = (Button) mMainView.findViewById(R.id.overlay_button_rec);
+        mButtonToggle = (Button) mMainView.findViewById(R.id.overlay_button_toggle);
+        mButtonScan = (Button) mMainView.findViewById(R.id.overlay_button_scan);
 
         mButtonPlay.setOnClickListener(this);
         mButtonExit.setOnClickListener(this);
-        mButtonRec.setOnClickListener(this);
+        mButtonToggle.setOnClickListener(this);
+        mButtonScan.setOnClickListener(this);
 
-        mTouchableView = new FrameLayout(this);
-        mTouchableView.setVisibility(View.INVISIBLE);
-        mTouchableView.setOnTouchListener(new View.OnTouchListener() {
+        mVisualizerView = new FrameLayout(this);
+        mVisualizerView.setVisibility(View.INVISIBLE);
+        mVisualizerView.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View view, MotionEvent motionEvent) {
                 if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
-                    int touchX = (int) motionEvent.getRawX();
-                    int touchY = (int) motionEvent.getRawY();
-                    if (mRecordTouch) {
-                        mClickList.add(new Point(touchX, touchY));
-                    }
+                    showVisualizer(false);
                 }
                 return false;
             }
         });
 
-        WindowManager.LayoutParams touchableParams = new WindowManager.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.TYPE_SYSTEM_ALERT, WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL| LayoutParams.FLAG_LAYOUT_IN_SCREEN, PixelFormat.TRANSLUCENT);
+        WindowManager.LayoutParams touchableParams = new WindowManager.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.TYPE_SYSTEM_ALERT, WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | LayoutParams.FLAG_LAYOUT_IN_SCREEN, PixelFormat.TRANSLUCENT);
         touchableParams.gravity = Gravity.LEFT | Gravity.TOP;
         touchableParams.x = 0;
         touchableParams.y = 0;
-        mWindowManager.addView(mTouchableView, touchableParams);
+        mWindowManager.addView(mVisualizerView, touchableParams);
 
-        WindowManager.LayoutParams params = new WindowManager.LayoutParams(WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.TYPE_SYSTEM_ALERT, WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL| LayoutParams.FLAG_LAYOUT_IN_SCREEN, PixelFormat.TRANSLUCENT);
+        WindowManager.LayoutParams params = new WindowManager.LayoutParams(WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.TYPE_SYSTEM_ALERT, WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | LayoutParams.FLAG_LAYOUT_IN_SCREEN, PixelFormat.TRANSLUCENT);
         params.gravity = Gravity.LEFT | Gravity.TOP;
         params.x = 0;
         params.y = 0;
         mWindowManager.addView(mMainView, params);
 
         topLeftView = new View(this);
-        WindowManager.LayoutParams topLeftParams = new WindowManager.LayoutParams(WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.TYPE_SYSTEM_ALERT, WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL| LayoutParams.FLAG_LAYOUT_IN_SCREEN, PixelFormat.TRANSLUCENT);
+        WindowManager.LayoutParams topLeftParams = new WindowManager.LayoutParams(WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.TYPE_SYSTEM_ALERT, WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | LayoutParams.FLAG_LAYOUT_IN_SCREEN, PixelFormat.TRANSLUCENT);
         topLeftParams.gravity = Gravity.LEFT | Gravity.TOP;
         topLeftParams.x = 0;
         topLeftParams.y = 0;
@@ -164,30 +161,32 @@ public class OverlayShowingService extends Service implements View.OnTouchListen
         return false;
     }
 
-    private void toggleRecording(boolean _enabled) {
-        if (_enabled) {
-            mRecordTouch = false;
-            mTouchableView.setVisibility(View.INVISIBLE);
-            injectTouch(mClickList);
+    private void toggleVisualizer() {
+        if (mVisualizerView.getVisibility() == View.VISIBLE) {
+            mVisualizerView.setVisibility(View.INVISIBLE);
         } else {
-            mRecordTouch = true;
-            mTouchableView.setVisibility(View.VISIBLE);
+            mVisualizerView.setVisibility(View.VISIBLE);
         }
     }
 
-    private void toggleRecording() {
-        toggleRecording(mRecordTouch);
+    private void showVisualizer(boolean _show) {
+        if (_show) {
+            mVisualizerView.setVisibility(View.VISIBLE);
+        } else {
+            mVisualizerView.setVisibility(View.INVISIBLE);
+        }
     }
-
 
     @Override
     public void onClick(View _view) {
-        if (_view == mButtonRec) {
-            toggleRecording();
+        if (_view == mButtonToggle) {
+            toggleVisualizer();
         } else if (_view == mButtonPlay) {
-            scanScreen();
+            injectTouch(mClickList);
         } else if (_view == mButtonExit) {
             this.stopSelf();
+        } else if (_view == mButtonScan) {
+            scanScreen();
         }
     }
 
@@ -225,7 +224,7 @@ public class OverlayShowingService extends Service implements View.OnTouchListen
                                     Point p = points.get(i);
                                     doClick(p.x, p.y);
                                     try {
-                                        Thread.sleep(50);
+                                        Thread.sleep(100);
                                     } catch (InterruptedException e) {
                                         e.printStackTrace();
                                     }
@@ -246,33 +245,37 @@ public class OverlayShowingService extends Service implements View.OnTouchListen
         int pixel[] = BitmapUtil.getBitmapPixel(screen);
         for (int i = 0; i < pixel.length; i++) {
             int currentPixel = pixel[i];
-            int redValue = Color.red(currentPixel);
-            int blueValue = Color.blue(currentPixel);
-            int greenValue = Color.green(currentPixel);
-            if (redValue >= 230 && redValue <= 250 &&
-                    greenValue >= 220 && greenValue <= 240 &&
-                    blueValue >= 70 && blueValue <= 90) {
+            if (BitmapUtil.isAboutSameColor(currentPixel, 240, 230, 80, 30)) {
                 points.add(pixelToPoint(currentPixel, screen, pixel.length, i));
             }
         }
+        android.util.Log.d("", "count: " + points.size());
 
-        mTouchableView.removeAllViews();
+        drawPointsToView(points);
+
+        mClickList = points;
+        //mClickList = getRefinedPoints(points);
+    }
+
+    private void drawPointsToView(ArrayList<Point> points) {
+        mVisualizerView.removeAllViews();
 
         for (Point p : points) {
             ImageView v = new ImageView(this);
-            v.setLayoutParams(new FrameLayout.LayoutParams(10, 10));
+            v.setLayoutParams(new FrameLayout.LayoutParams(1, 1));
             v.setBackgroundColor(Color.CYAN);
             v.setX(p.x);
             v.setY(p.y);
-            mTouchableView.addView(v);
+            mVisualizerView.addView(v);
         }
-
-        mClickList = refinedPoints(points);
     }
 
-    private ArrayList<Point> refinedPoints(ArrayList<Point> points) {
+    private ArrayList<Point> getRefinedPoints(ArrayList<Point> points) {
         ArrayList<Point> newPoints = new ArrayList<Point>();
-        
+
+        for (int i = 0; i < points.size(); i++) {
+
+        }
 
         return null;
     }
