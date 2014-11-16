@@ -69,7 +69,6 @@ public class OverlayShowingService extends Service implements View.OnTouchListen
         mButtonExit.setOnClickListener(this);
         mButtonRec.setOnClickListener(this);
 
-
         mTouchableView = new ImageView(this);
         mTouchableView.setVisibility(View.INVISIBLE);
         mTouchableView.setOnTouchListener(new View.OnTouchListener() {
@@ -85,11 +84,12 @@ public class OverlayShowingService extends Service implements View.OnTouchListen
                 return false;
             }
         });
-        WindowManager.LayoutParams touchabeParams = new WindowManager.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.TYPE_SYSTEM_ALERT, WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL, PixelFormat.TRANSLUCENT);
-        touchabeParams.gravity = Gravity.LEFT | Gravity.TOP;
-        touchabeParams.x = 0;
-        touchabeParams.y = 0;
-        mWindowManager.addView(mTouchableView, touchabeParams);
+
+        WindowManager.LayoutParams touchableParams = new WindowManager.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.TYPE_SYSTEM_ALERT, WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL, PixelFormat.TRANSLUCENT);
+        touchableParams.gravity = Gravity.LEFT | Gravity.TOP;
+        touchableParams.x = 0;
+        touchableParams.y = 0;
+        mWindowManager.addView(mTouchableView, touchableParams);
 
         WindowManager.LayoutParams params = new WindowManager.LayoutParams(WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.TYPE_SYSTEM_ALERT, WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL, PixelFormat.TRANSLUCENT);
         params.gravity = Gravity.LEFT | Gravity.TOP;
@@ -123,7 +123,6 @@ public class OverlayShowingService extends Service implements View.OnTouchListen
         if (event.getAction() == MotionEvent.ACTION_DOWN) {
             float x = event.getRawX();
             float y = event.getRawY();
-
             moving = false;
 
             int[] location = new int[2];
@@ -131,18 +130,11 @@ public class OverlayShowingService extends Service implements View.OnTouchListen
 
             originalXPos = location[0];
             originalYPos = location[1];
-
             offsetX = originalXPos - x;
             offsetY = originalYPos - y;
         } else if (event.getAction() == MotionEvent.ACTION_MOVE) {
-            int[] topLeftLocationOnScreen = new int[2];
-            topLeftView.getLocationOnScreen(topLeftLocationOnScreen);
-
             float x = event.getRawX();
             float y = event.getRawY();
-
-            WindowManager.LayoutParams params = (LayoutParams) mMainView.getLayoutParams();
-
             int newX = (int) (offsetX + x);
             int newY = (int) (offsetY + y);
 
@@ -150,6 +142,10 @@ public class OverlayShowingService extends Service implements View.OnTouchListen
                 return false;
             }
 
+            int[] topLeftLocationOnScreen = new int[2];
+            topLeftView.getLocationOnScreen(topLeftLocationOnScreen);
+
+            WindowManager.LayoutParams params = (LayoutParams) mMainView.getLayoutParams();
             params.x = newX - (topLeftLocationOnScreen[0]);
             params.y = newY - (topLeftLocationOnScreen[1]);
 
