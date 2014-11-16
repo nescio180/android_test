@@ -1,20 +1,10 @@
-package de.nescio.androidbot_test;
+package de.nescio.androidbot_test.activity;
 
 import android.app.Activity;
-import android.app.Instrumentation;
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.SystemClock;
-import android.view.MotionEvent;
-import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
-import android.widget.Button;
-import android.widget.FrameLayout;
-import android.widget.TextView;
 
-import de.nescio.androidbottest.R;
+import de.nescio.androidbot_test.service.OverlayShowingService;
 
 
 public class MainActivity extends Activity {

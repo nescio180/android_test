@@ -1,13 +1,13 @@
-package de.nescio.androidbot_test;
+package de.nescio.androidbot_test.service;
 
 import android.app.Instrumentation;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.graphics.PixelFormat;
-import android.os.Handler;
+import android.os.Environment;
 import android.os.IBinder;
-import android.os.Looper;
 import android.os.SystemClock;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -17,9 +17,16 @@ import android.view.View.OnClickListener;
 import android.view.WindowManager;
 import android.view.WindowManager.LayoutParams;
 import android.widget.Button;
+import android.widget.ImageView;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 
+import de.nescio.androidbot_test.utils.BitmapUtil;
+import de.nescio.androidbot_test.utils.Point;
 import de.nescio.androidbottest.R;
 
 /**
@@ -30,7 +37,7 @@ public class OverlayShowingService extends Service implements View.OnTouchListen
     private Button mButtonRec, mButtonPlay, mButtonExit;
     private View topLeftView;
     private View mMainView;
-    private View mTouchableView;
+    private ImageView mTouchableView;
     private float offsetX;
     private float offsetY;
     private int originalXPos;
@@ -63,7 +70,7 @@ public class OverlayShowingService extends Service implements View.OnTouchListen
         mButtonRec.setOnClickListener(this);
 
 
-        mTouchableView = new View(this);
+        mTouchableView = new ImageView(this);
         mTouchableView.setVisibility(View.INVISIBLE);
         mTouchableView.setOnTouchListener(new View.OnTouchListener() {
             @Override
@@ -183,44 +190,59 @@ public class OverlayShowingService extends Service implements View.OnTouchListen
         }
     }
 
-    private void injectTouch() {
-        Thread task = new Thread(new Runnable() {
-            private Handler handler;
+    private void saveBitmapToSD(Bitmap b) {
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        b.compress(Bitmap.CompressFormat.JPEG, 40, bytes);
 
-            @Override
-            public void run() {
-                Looper.prepare();
-                handler = new Handler();
-                handler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (mClickList != null) {
-                            if (!mClickList.isEmpty()) {
-                                for (int i = 0; i < mClickList.size(); i++) {
-                                    Point p = mClickList.get(i);
-                                    doClick(p.x, p.y);
-                                    try {
-                                        Thread.sleep(300);
-                                    } catch (InterruptedException e) {
-                                        e.printStackTrace();
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }, 100);
-                Looper.loop();
-            }
-        });
-        task.start();
+        File f = new File(Environment.getExternalStorageDirectory()
+                + File.separator + "test.jpg");
+        try {
+            f.createNewFile();
+            FileOutputStream fo = new FileOutputStream(f);
+            fo.write(bytes.toByteArray());
+            fo.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
-    /**
-     * Injects Click Event
-     *
-     * @param _x
-     * @param _y
-     */
+    private void injectTouch() {
+//        Thread task = new Thread(new Runnable() {
+//            private Handler handler;
+//
+//            @Override
+//            public void run() {
+//                Looper.prepare();
+//                handler = new Handler();
+//                handler.postDelayed(new Runnable() {
+//                    @Override
+//                    public void run() {
+//                        if (mClickList != null) {
+//                            if (!mClickList.isEmpty()) {
+//                                for (int i = 0; i < mClickList.size(); i++) {
+//                                    Point p = mClickList.get(i);
+//                                    doClick(p.x, p.y);
+//                                    try {
+//                                        Thread.sleep(300);
+//                                    } catch (InterruptedException e) {
+//                                        e.printStackTrace();
+//                                    }
+//                                }
+//                            }
+//                        }
+//                    }
+//                }, 100);
+//                Looper.loop();
+//            }
+//        });
+//        task.start();
+    }
+
+    private void takeScreenshot() {
+        BitmapUtil.getInstance().takeScreenShot();
+    }
+
     private void doClick(int _x, int _y) {
         Instrumentation m_Instrumentation = new Instrumentation();
         m_Instrumentation.setInTouchMode(false);
@@ -229,24 +251,4 @@ public class OverlayShowingService extends Service implements View.OnTouchListen
         m_Instrumentation.sendPointerSync(MotionEvent.obtain(SystemClock.uptimeMillis(),
                 SystemClock.uptimeMillis(), MotionEvent.ACTION_UP, _x, _y, 0));
     }
-
-    /**
-     * Injects Key Event
-     *
-     * @param _key
-     */
-    private void pressKey(int _key) {
-        Instrumentation m_Instrumentation = new Instrumentation();
-        m_Instrumentation.sendKeyDownUpSync(_key);
-    }
-
-    public class Point {
-        public int x, y;
-
-        public Point(int _x, int _y) {
-            x = _x;
-            y = _y;
-        }
-    }
-
 }

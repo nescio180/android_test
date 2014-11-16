@@ -1,4 +1,4 @@
-package de.nescio.androidbot_test;
+package de.nescio.androidbot_test.utils;
 
 import android.os.IBinder;
 

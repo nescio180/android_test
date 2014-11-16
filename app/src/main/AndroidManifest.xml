@@ -3,6 +3,7 @@
     package="de.nescio.androidbottest" >
 
     <uses-permission android:name="android.permission.INJECT_EVENTS"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 
     <application
         android:allowBackup="true"
@@ -10,7 +11,7 @@
         android:label="@string/app_name"
         android:theme="@android:style/Theme.Translucent.NoTitleBar.Fullscreen" >
         <activity
-            android:name="de.nescio.androidbot_test.MainActivity"
+            android:name="de.nescio.androidbot_test.activity.MainActivity"
             android:label="@string/app_name" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -19,7 +20,7 @@
             </intent-filter>
         </activity>
         <service
-            android:name="de.nescio.androidbot_test.OverlayShowingService"
+            android:name="de.nescio.androidbot_test.service.OverlayShowingService"
             android:exported="false" />
     </application>
 

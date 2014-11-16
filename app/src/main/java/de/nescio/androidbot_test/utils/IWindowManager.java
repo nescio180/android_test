@@ -1,6 +1,5 @@
-package de.nescio.androidbot_test;
+package de.nescio.androidbot_test.utils;
 
-import android.os.Binder;
 import android.os.IBinder;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
