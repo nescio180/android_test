@@ -245,7 +245,8 @@ public class OverlayShowingService extends Service implements View.OnTouchListen
         int pixel[] = BitmapUtil.getBitmapPixel(screen);
         for (int i = 0; i < pixel.length; i++) {
             int currentPixel = pixel[i];
-            if (BitmapUtil.isAboutSameColor(currentPixel, 240, 230, 80, 30)) {
+            if (BitmapUtil.isAboutSameColor(currentPixel, 240, 230, 80, 30) ||
+                    BitmapUtil.isAboutSameColor(currentPixel, 243, 44, 224, 30)) {
                 points.add(pixelToPoint(currentPixel, screen, pixel.length, i));
             }
         }
