@@ -3,7 +3,6 @@ package de.nescio.androidbot_test.activity;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-
 import de.nescio.androidbot_test.service.OverlayShowingService;
 
 
