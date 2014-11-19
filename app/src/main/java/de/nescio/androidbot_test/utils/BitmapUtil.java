@@ -7,6 +7,8 @@ import android.graphics.Color;
 import java.io.IOException;
 import java.io.OutputStream;
 
+import dalvik.system.BaseDexClassLoader;
+
 /**
  * Created by Wohnzimmer on 16.11.2014.
  */
