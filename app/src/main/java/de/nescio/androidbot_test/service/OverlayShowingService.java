@@ -28,9 +28,12 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 import de.nescio.androidbot_test.utils.BitmapUtil;
 import de.nescio.androidbot_test.utils.Point;
+import de.nescio.androidbot_test.utils.ScreenUtil;
 import de.nescio.androidbottest.R;
 
 /**
@@ -47,7 +50,6 @@ public class OverlayShowingService extends Service implements View.OnTouchListen
     private int originalXPos;
     private int originalYPos;
     private boolean moving;
-    private boolean mVisualize;
     private volatile ArrayList<Point> mClickList = new ArrayList<Point>();
 
     @Override
@@ -58,7 +60,10 @@ public class OverlayShowingService extends Service implements View.OnTouchListen
     @Override
     public void onCreate() {
         super.onCreate();
+        init();
+    }
 
+    public void init() {
         mWindowManager = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
         LayoutInflater inflater = (LayoutInflater) getApplicationContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
@@ -251,33 +256,70 @@ public class OverlayShowingService extends Service implements View.OnTouchListen
         }
         android.util.Log.d("", "count: " + points.size());
 
-        drawPointsToView(points);
+        //mClickList = points;
+        mClickList.clear();
+        mClickList.addAll(getRefinedPoints(points));
+        drawPointsToView(mClickList);
+    }
 
-        mClickList = points;
-        //mClickList = getRefinedPoints(points);
+    private Set<Point> getRefinedPoints(ArrayList<Point> sourceList) {
+        Set<Point> targetList = new HashSet<Point>();
+        ArrayList<Point> oldSource = new ArrayList<Point>();
+        if (!sourceList.isEmpty()) {
+            oldSource.addAll(sourceList);
+            android.util.Log.d("", "testtest " + "isNotEmpty");
+            while (!oldSource.isEmpty()) {
+                targetList.addAll(getTouchSetList(oldSource.get(0), sourceList, targetList));
+                oldSource.removeAll(targetList);
+                android.util.Log.d("", "testtest " + "size is:" + targetList.size());
+            }
+        }
+        return targetList;
+    }
+
+    private Set<Point> getTouchSetList(Point p, ArrayList<Point> sourceList, Set<Point> targetList) {
+        targetList.add(p);
+        Set<Point> surroundings = getSurroundingPoints(p);
+        for (Point pp : surroundings) {
+            android.util.Log.d("", "testtest " + "before");
+            if (sourceList.contains(pp)) {
+                android.util.Log.d("", "testtest " + "contained");
+                if (!targetList.contains(pp)) {
+                    android.util.Log.d("", "testtest " + "after");
+                    targetList.add(pp);
+                    targetList.addAll(getTouchSetList(pp, sourceList, targetList));
+                }
+            }
+        }
+
+        return targetList;
+    }
+
+    private Set<Point> getSurroundingPoints(Point currentPoint) {
+        Set<Point> surroundings = new HashSet<Point>();
+        surroundings.add(new Point(currentPoint.x, currentPoint.y - 1));
+        surroundings.add(new Point(currentPoint.x, currentPoint.y + 1));
+        surroundings.add(new Point(currentPoint.x - 1, currentPoint.y));
+        surroundings.add(new Point(currentPoint.x + 1, currentPoint.y));
+        return surroundings;
     }
 
     private void drawPointsToView(ArrayList<Point> points) {
         mVisualizerView.removeAllViews();
-
+        boolean isNormalMode = ScreenUtil.getScreenOrientation(mWindowManager).equals(ScreenUtil.LANDSCAPE_NORMAL);
         for (Point p : points) {
             ImageView v = new ImageView(this);
             v.setLayoutParams(new FrameLayout.LayoutParams(1, 1));
             v.setBackgroundColor(Color.CYAN);
-            v.setX(p.x);
-            v.setY(p.y);
+            if (isNormalMode) {
+                v.setX(mVisualizerView.getWidth() - p.x);
+                v.setY(mVisualizerView.getHeight() - p.y);
+            } else {
+                v.setX(p.x);
+                v.setY(p.y);
+            }
             mVisualizerView.addView(v);
         }
-    }
-
-    private ArrayList<Point> getRefinedPoints(ArrayList<Point> points) {
-        ArrayList<Point> newPoints = new ArrayList<Point>();
-
-        for (int i = 0; i < points.size(); i++) {
-
-        }
-
-        return null;
     }
 
     private Point pixelToPoint(int pixel, Bitmap b, int pixelCount, int position) {
