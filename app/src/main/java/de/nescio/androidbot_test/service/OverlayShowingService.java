@@ -12,6 +12,7 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
 import android.os.SystemClock;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
@@ -30,6 +31,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 import de.nescio.androidbot_test.utils.BitmapUtil;
+import de.nescio.androidbot_test.utils.ImageProcessingUtil;
 import de.nescio.androidbot_test.utils.Point;
 import de.nescio.androidbottest.R;
 
@@ -47,7 +49,6 @@ public class OverlayShowingService extends Service implements View.OnTouchListen
     private int originalXPos;
     private int originalYPos;
     private boolean moving;
-    private boolean mVisualize;
     private volatile ArrayList<Point> mClickList = new ArrayList<Point>();
 
     @Override
@@ -58,7 +59,10 @@ public class OverlayShowingService extends Service implements View.OnTouchListen
     @Override
     public void onCreate() {
         super.onCreate();
+        init();
+    }
 
+    public void init() {
         mWindowManager = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
         LayoutInflater inflater = (LayoutInflater) getApplicationContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 

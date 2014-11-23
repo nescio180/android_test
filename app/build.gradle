@@ -2,7 +2,7 @@ apply plugin: 'com.android.application'
 
 android {
     compileSdkVersion 21
-    buildToolsVersion "21.0.0"
+    buildToolsVersion '21.1.1'
 
     defaultConfig {
         applicationId "de.nescio.androidbot_test"
@@ -19,5 +19,5 @@ android {
 
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
-    compile project(':openCVLibrary200')
+    compile project(':fippy')
 }
