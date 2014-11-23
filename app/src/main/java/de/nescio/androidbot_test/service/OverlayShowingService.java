@@ -256,52 +256,8 @@ public class OverlayShowingService extends Service implements View.OnTouchListen
         }
         android.util.Log.d("", "count: " + points.size());
 
-        //mClickList = points;
-        mClickList.clear();
-        mClickList.addAll(getRefinedPoints(points));
+        mClickList = points;
         drawPointsToView(mClickList);
-    }
-
-    private Set<Point> getRefinedPoints(ArrayList<Point> sourceList) {
-        Set<Point> targetList = new HashSet<Point>();
-        ArrayList<Point> oldSource = new ArrayList<Point>();
-        if (!sourceList.isEmpty()) {
-            oldSource.addAll(sourceList);
-            android.util.Log.d("", "testtest " + "isNotEmpty");
-            while (!oldSource.isEmpty()) {
-                targetList.addAll(getTouchSetList(oldSource.get(0), sourceList, targetList));
-                oldSource.removeAll(targetList);
-                android.util.Log.d("", "testtest " + "size is:" + targetList.size());
-            }
-        }
-        return targetList;
-    }
-
-    private Set<Point> getTouchSetList(Point p, ArrayList<Point> sourceList, Set<Point> targetList) {
-        targetList.add(p);
-        Set<Point> surroundings = getSurroundingPoints(p);
-        for (Point pp : surroundings) {
-            android.util.Log.d("", "testtest " + "before");
-            if (sourceList.contains(pp)) {
-                android.util.Log.d("", "testtest " + "contained");
-                if (!targetList.contains(pp)) {
-                    android.util.Log.d("", "testtest " + "after");
-                    targetList.add(pp);
-                    targetList.addAll(getTouchSetList(pp, sourceList, targetList));
-                }
-            }
-        }
-
-        return targetList;
-    }
-
-    private Set<Point> getSurroundingPoints(Point currentPoint) {
-        Set<Point> surroundings = new HashSet<Point>();
-        surroundings.add(new Point(currentPoint.x, currentPoint.y - 1));
-        surroundings.add(new Point(currentPoint.x, currentPoint.y + 1));
-        surroundings.add(new Point(currentPoint.x - 1, currentPoint.y));
-        surroundings.add(new Point(currentPoint.x + 1, currentPoint.y));
-        return surroundings;
     }
 
     private void drawPointsToView(ArrayList<Point> points) {
