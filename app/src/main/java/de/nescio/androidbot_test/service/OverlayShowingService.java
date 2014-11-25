@@ -18,6 +18,9 @@ import android.view.WindowManager;
 import android.view.WindowManager.LayoutParams;
 import android.widget.Button;
 
+import org.opencv.android.OpenCVLoader;
+import org.opencv.imgproc.Imgproc;
+
 import java.util.ArrayList;
 
 import de.nescio.androidbot_test.utils.BitmapUtil;
@@ -52,6 +55,8 @@ public class OverlayShowingService extends Service implements View.OnTouchListen
     }
 
     public void init() {
+        OpenCVLoader.initDebug();
+
         mWindowManager = (WindowManager) getSystemService(Context.WINDOW_SERVICE);
         LayoutInflater inflater = (LayoutInflater) getApplicationContext().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
 
@@ -139,8 +144,8 @@ public class OverlayShowingService extends Service implements View.OnTouchListen
     @Override
     public void onClick(View _view) {
         if (_view == mButtonToggle) {
-            MatchingUtil.matchFeature("/sdcard/screen2.png", "/sdcard/coc_elixir_icon.png");
-            //MatchingUtil.match("/sdcard/screen2.png", "/sdcard/out.png", "/sdcard/coc_elixir_icon.png", Imgproc.TM_CCORR_NORMED);
+            //MatchingUtil.matchFeature("/sdcard/screen.png", "/sdcard/coc_gold_icon.png");
+            MatchingUtil.match("/sdcard/screen.png", "/sdcard/out.png", "/sdcard/coc_elixir_icon.png", Imgproc.TM_CCORR_NORMED);
         } else if (_view == mButtonPlay) {
             injectTouch(mClickList);
         } else if (_view == mButtonExit) {
