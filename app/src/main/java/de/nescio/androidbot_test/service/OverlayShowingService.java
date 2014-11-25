@@ -4,10 +4,7 @@ import android.app.Instrumentation;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.graphics.PixelFormat;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Looper;
@@ -20,20 +17,12 @@ import android.view.View.OnClickListener;
 import android.view.WindowManager;
 import android.view.WindowManager.LayoutParams;
 import android.widget.Button;
-import android.widget.FrameLayout;
-import android.widget.ImageView;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Set;
 
 import de.nescio.androidbot_test.utils.BitmapUtil;
+import de.nescio.androidbot_test.utils.MatchingUtil;
 import de.nescio.androidbot_test.utils.Point;
-import de.nescio.androidbot_test.utils.ScreenUtil;
 import de.nescio.androidbottest.R;
 
 /**
@@ -44,7 +33,6 @@ public class OverlayShowingService extends Service implements View.OnTouchListen
     private Button mButtonToggle, mButtonPlay, mButtonExit, mButtonScan;
     private View topLeftView;
     private View mMainView;
-    private FrameLayout mVisualizerView;
     private float offsetX;
     private float offsetY;
     private int originalXPos;
@@ -79,24 +67,6 @@ public class OverlayShowingService extends Service implements View.OnTouchListen
         mButtonExit.setOnClickListener(this);
         mButtonToggle.setOnClickListener(this);
         mButtonScan.setOnClickListener(this);
-
-        mVisualizerView = new FrameLayout(this);
-        mVisualizerView.setVisibility(View.INVISIBLE);
-        mVisualizerView.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View view, MotionEvent motionEvent) {
-                if (motionEvent.getAction() == MotionEvent.ACTION_DOWN) {
-                    showVisualizer(false);
-                }
-                return false;
-            }
-        });
-
-        WindowManager.LayoutParams touchableParams = new WindowManager.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT, WindowManager.LayoutParams.TYPE_SYSTEM_ALERT, WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | LayoutParams.FLAG_LAYOUT_IN_SCREEN, PixelFormat.TRANSLUCENT);
-        touchableParams.gravity = Gravity.LEFT | Gravity.TOP;
-        touchableParams.x = 0;
-        touchableParams.y = 0;
-        mWindowManager.addView(mVisualizerView, touchableParams);
 
         WindowManager.LayoutParams params = new WindowManager.LayoutParams(WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.WRAP_CONTENT, WindowManager.LayoutParams.TYPE_SYSTEM_ALERT, WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL | LayoutParams.FLAG_LAYOUT_IN_SCREEN, PixelFormat.TRANSLUCENT);
         params.gravity = Gravity.LEFT | Gravity.TOP;
@@ -166,50 +136,18 @@ public class OverlayShowingService extends Service implements View.OnTouchListen
         return false;
     }
 
-    private void toggleVisualizer() {
-        if (mVisualizerView.getVisibility() == View.VISIBLE) {
-            mVisualizerView.setVisibility(View.INVISIBLE);
-        } else {
-            mVisualizerView.setVisibility(View.VISIBLE);
-        }
-    }
-
-    private void showVisualizer(boolean _show) {
-        if (_show) {
-            mVisualizerView.setVisibility(View.VISIBLE);
-        } else {
-            mVisualizerView.setVisibility(View.INVISIBLE);
-        }
-    }
-
     @Override
     public void onClick(View _view) {
         if (_view == mButtonToggle) {
-            toggleVisualizer();
+            MatchingUtil.matchFeature("/sdcard/screen2.png", "/sdcard/coc_elixir_icon.png");
+            //MatchingUtil.match("/sdcard/screen2.png", "/sdcard/out.png", "/sdcard/coc_elixir_icon.png", Imgproc.TM_CCORR_NORMED);
         } else if (_view == mButtonPlay) {
             injectTouch(mClickList);
         } else if (_view == mButtonExit) {
             this.stopSelf();
         } else if (_view == mButtonScan) {
-            scanScreen();
+            takeScreenshot();
         }
-    }
-
-    private void saveBitmapToSD(Bitmap b) {
-        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-        b.compress(Bitmap.CompressFormat.JPEG, 40, bytes);
-
-        File f = new File(Environment.getExternalStorageDirectory()
-                + File.separator + "test.jpg");
-        try {
-            f.createNewFile();
-            FileOutputStream fo = new FileOutputStream(f);
-            fo.write(bytes.toByteArray());
-            fo.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
     }
 
     private void injectTouch(final ArrayList<Point> points) {
@@ -244,50 +182,8 @@ public class OverlayShowingService extends Service implements View.OnTouchListen
         task.start();
     }
 
-    public void scanScreen() {
-        ArrayList<Point> points = new ArrayList<Point>();
-        Bitmap screen = BitmapUtil.getScreenBitmap();
-        int pixel[] = BitmapUtil.getBitmapPixel(screen);
-        for (int i = 0; i < pixel.length; i++) {
-            int currentPixel = pixel[i];
-            if (BitmapUtil.isAboutSameColor(currentPixel, 214, 216, 184, 30)) {
-                points.add(pixelToPoint(currentPixel, screen, pixel.length, i));
-            }
-        }
-        android.util.Log.d("", "count: " + points.size());
-
-        mClickList = points;
-        drawPointsToView(mClickList);
-    }
-
-    private void drawPointsToView(ArrayList<Point> points) {
-        mVisualizerView.removeAllViews();
-        boolean isNormalMode = ScreenUtil.getScreenOrientation(mWindowManager).equals(ScreenUtil.LANDSCAPE_NORMAL);
-        for (Point p : points) {
-            ImageView v = new ImageView(this);
-            v.setLayoutParams(new FrameLayout.LayoutParams(1, 1));
-            v.setBackgroundColor(Color.CYAN);
-            if (isNormalMode) {
-                v.setX(mVisualizerView.getWidth() - p.x);
-                v.setY(mVisualizerView.getHeight() - p.y);
-            } else {
-                v.setX(p.x);
-                v.setY(p.y);
-            }
-            mVisualizerView.addView(v);
-        }
-    }
-
-    private Point pixelToPoint(int pixel, Bitmap b, int pixelCount, int position) {
-        int width = b.getWidth();
-        int height = b.getHeight();
-
-        // TODO
-        int x = (height - position / width);
-        int y = (position % width);
-
-        Point p = new Point(x, y);
-        return p;
+    public void takeScreenshot() {
+        BitmapUtil.takeScreenShot();
     }
 
     private void doClick(int _x, int _y) {

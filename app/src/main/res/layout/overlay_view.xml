@@ -32,7 +32,7 @@
 
         <Button
             android:id="@+id/overlay_button_scan"
-            android:text="scan"
+            android:text="screenshot"
             android:minWidth="80dp"
             android:padding="5dp"
             android:layout_gravity="center"
