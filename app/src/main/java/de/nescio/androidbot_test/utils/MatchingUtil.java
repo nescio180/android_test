@@ -1,20 +1,29 @@
 package de.nescio.androidbot_test.utils;
 
-import org.opencv.android.OpenCVLoader;
+import android.os.Environment;
+
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
+import org.opencv.core.MatOfByte;
 import org.opencv.core.MatOfDMatch;
 import org.opencv.core.MatOfKeyPoint;
 import org.opencv.core.Point;
+import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.features2d.DMatch;
 import org.opencv.features2d.DescriptorExtractor;
 import org.opencv.features2d.DescriptorMatcher;
 import org.opencv.features2d.FeatureDetector;
+import org.opencv.features2d.Features2d;
 import org.opencv.highgui.Highgui;
 import org.opencv.imgproc.Imgproc;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,41 +41,70 @@ public class MatchingUtil {
         boolean hasChanged = false;
 
         Imgproc.matchTemplate(source, template, result, match_method);
-        Core.normalize(source, result, 0, 1, Core.NORM_MINMAX, -1, new Mat());
+        //Core.normalize(result, result, 0, 1, Core.NORM_MINMAX, -1, new Mat());
+        Imgproc.threshold(result, result, 0.1, 1, Imgproc.THRESH_TOZERO);
 
-        Core.MinMaxLocResult mmr = Core.minMaxLoc(result);
-        org.opencv.core.Point matchLoc;
-        if (match_method == Imgproc.TM_SQDIFF || match_method == Imgproc.TM_SQDIFF_NORMED) {
-            matchLoc = mmr.minLoc;
-        } else {
-            matchLoc = mmr.maxLoc;
+        while(true)
+        {
+            double minval, maxval, threshold = 0.6;
+            Point minloc, maxloc;
+            Core.MinMaxLocResult mmr = Core.minMaxLoc(result);
+            minloc = mmr.minLoc;
+            maxloc = mmr.maxLoc;
+            minval = mmr.minVal;
+            maxval = mmr.maxVal;
+
+            android.util.Log.d("", "TESTTEST " + maxval + ", " + mmr.minVal + ", " + mmr.maxLoc + ", " + mmr.minLoc);
+            if(maxval >= threshold)
+            {
+                android.util.Log.d("", "TESTTEST2 " + maxval + ", " + mmr.minVal + ", " + mmr.maxLoc + ", " + mmr.minLoc);
+                Core.rectangle(source, maxloc, new Point(maxloc.x + template.cols(), maxloc.y + template.rows()),
+                        new Scalar(0, 255, 0), 2);
+
+                Rect rect = new Rect();
+                Mat mat = new Mat(source.rows() + 2, source.cols() + 2,
+                        CvType.CV_8UC1);
+                Imgproc.floodFill(source, mat, maxloc, Scalar.all(255), rect,
+                        Scalar.all(0), Scalar.all(0), Imgproc.);
+
+                boolean write = Highgui.imwrite(outFile, source);
+//                Imgproc.floodFill(source, new Mat(), maxloc, new Scalar(0));
+                break;
+            }
+            else
+            {
+                break;
+            }
         }
-
-        android.util.Log.d("",""+ mmr.maxVal + ", " + mmr.minVal + ", " + mmr.minVal + ", " + mmr.minLoc);
-
-        // / Show me what you got
-        Core.rectangle(source, matchLoc, new Point(matchLoc.x + template.cols(), matchLoc.y + template.rows()),
-                new Scalar(0, 255, 0), -1);
-
-        boolean write = Highgui.imwrite(outFile, source);
-
-        if (hasChanged) {
-            match(outFile, outFile, templateFile, match_method);
-        }
+//
+//
+//        // / Show me what you got
+//        Core.rectangle(source, matchLoc, new Point(matchLoc.x + template.cols(), matchLoc.y + template.rows()),
+//                new Scalar(0, 255, 0), -1);
+//
+//
+//        if (hasChanged) {
+//            match(outFile, outFile, templateFile, match_method);
+//        }
     }
 
-    public static boolean matchFeature(String inFile, String templateFile) {
-        OpenCVLoader.initDebug();
+    public static boolean matchFeature(String inFile, String templateFile, File cacheDir) {
+        FeatureDetector fast = FeatureDetector.create(FeatureDetector.FAST);
 
-        FeatureDetector fd = FeatureDetector.create(FeatureDetector.FAST);
+        String filename = Environment.getExternalStorageDirectory() + "fast_params.yml";
+        System.out.println("sdcard : " +  Environment.getExternalStorageDirectory());
+        File f = new File(filename);
+        writeToFile(f, "%YAML:1.0\nimage: mIntermediateMat\nkeypoints: points\nthreshold : 300 \nnonmaxSupression : true\ntype : FastFeatureDetector::TYPE_9_16\n");
+        DescriptorExtractor extractor = DescriptorExtractor.create(DescriptorExtractor.BRISK);
+        extractor.read(filename);
+
         final MatOfKeyPoint keyPointsLarge = new MatOfKeyPoint();
         final MatOfKeyPoint keyPointsSmall = new MatOfKeyPoint();
-
         Mat largeImage = Highgui.imread(inFile);
         Mat smallImage = Highgui.imread(templateFile);
 
-        fd.detect(largeImage, keyPointsLarge);
-        fd.detect(smallImage, keyPointsSmall);
+        fast.detect(largeImage, keyPointsLarge);
+        fast.detect(smallImage, keyPointsSmall);
 
         System.out.println("keyPoints.size() : " + keyPointsLarge.size());
         System.out.println("keyPoints2.size() : " + keyPointsSmall.size());
@@ -74,7 +112,6 @@ public class MatchingUtil {
         Mat descriptorsLarge = new Mat();
         Mat descriptorsSmall = new Mat();
 
-        DescriptorExtractor extractor = DescriptorExtractor.create(DescriptorExtractor.BRISK);
         extractor.compute(largeImage, keyPointsLarge, descriptorsLarge);
         extractor.compute(smallImage, keyPointsSmall, descriptorsSmall);
 
@@ -83,7 +120,7 @@ public class MatchingUtil {
 
         MatOfDMatch matches = new MatOfDMatch();
 
-        DescriptorMatcher matcher = DescriptorMatcher.create(DescriptorMatcher.BRUTEFORCE_HAMMINGLUT);
+        DescriptorMatcher matcher = DescriptorMatcher.create(DescriptorMatcher.BRUTEFORCE_HAMMING);
         matcher.match(descriptorsLarge, descriptorsSmall, matches);
 
         System.out.println("matches.size() : " + matches.size());
@@ -136,7 +173,7 @@ public class MatchingUtil {
 
             if (dist < threshold) {
                 bestMatches.add(matches.toList().get(i));
-                //System.out.println(String.format(i + " best match added : %s", dist));
+                System.out.println(String.format(i + " best match added : %s", dist));
             }
         }
 
@@ -145,13 +182,38 @@ public class MatchingUtil {
         System.out.println("matchesFiltered.size() : " + matchesFiltered.size());
 
         if (matchesFiltered.rows() >= 1) {
-            System.out.println("match found");
-            int x = bestMatches.get(0).queryIdx;
-            int y = bestMatches.get(0).trainIdx;
-            System.out.println("match found : " + "x: " + x + ", y:" + y);
+//            for (int i = 0; i < matchesFiltered.rows(); i++) {
+//                int x = bestMatches.get(i).queryIdx;
+//                int y = bestMatches.get(i).trainIdx;
+//
+//                Point px = keyPointsLarge.toArray()[x].pt;
+//                Point py = keyPointsSmall.toArray()[y].pt;
+//
+//                Core.rectangle(largeImage, px, new Point(px.x + 10, px.y + 10),
+//                        new Scalar(0, 255, 0), -1);
+//
+//                System.out.println("match found : " + "x: " + px + ", y:" + py);
+//            }
+            Mat out = new Mat();
+            MatOfByte mask = new MatOfByte();
+            Features2d.drawMatches(largeImage, keyPointsLarge, smallImage, keyPointsSmall, matchesFiltered, out, new Scalar(0, 255, 0), new Scalar(255, 0, 0), mask, Features2d.NOT_DRAW_SINGLE_POINTS);
+            boolean write = Highgui.imwrite("sdcard/out.png", out);
             return true;
         } else {
             return false;
+        }
+    }
+
+    private static void writeToFile(File file, String data) {
+        FileOutputStream stream = null;
+        try {
+            stream = new FileOutputStream(file);
+            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(stream);
+            outputStreamWriter.write(data);
+            outputStreamWriter.close();
+            stream.close();
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 }

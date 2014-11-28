@@ -144,8 +144,8 @@ public class OverlayShowingService extends Service implements View.OnTouchListen
     @Override
     public void onClick(View _view) {
         if (_view == mButtonToggle) {
-            //MatchingUtil.matchFeature("/sdcard/screen.png", "/sdcard/coc_gold_icon.png");
-            MatchingUtil.match("/sdcard/screen.png", "/sdcard/out.png", "/sdcard/coc_elixir_icon.png", Imgproc.TM_CCORR_NORMED);
+            //MatchingUtil.matchFeature("/sdcard/screen.png", "/sdcard/coc_elixir_icon.png", getCacheDir());
+            MatchingUtil.match("/sdcard/screen.png", "/sdcard/out.png", "/sdcard/coc_elixir_icon_small.png", Imgproc.TM_SQDIFF_NORMED);
         } else if (_view == mButtonPlay) {
             injectTouch(mClickList);
         } else if (_view == mButtonExit) {
