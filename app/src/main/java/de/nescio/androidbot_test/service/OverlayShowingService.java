@@ -246,7 +246,7 @@ public class OverlayShowingService extends Service implements View.OnTouchListen
 
     public void scanScreen() {
         ArrayList<Point> points = new ArrayList<Point>();
-        Bitmap screen = BitmapUtil.getScreenBitmap();
+        Bitmap screen = BitmapUtil.getScreenAsBitmap();
         int pixel[] = BitmapUtil.getBitmapPixel(screen);
         for (int i = 0; i < pixel.length; i++) {
             int currentPixel = pixel[i];

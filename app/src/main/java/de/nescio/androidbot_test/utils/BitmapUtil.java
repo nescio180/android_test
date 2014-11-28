@@ -7,8 +7,6 @@ import android.graphics.Color;
 import java.io.IOException;
 import java.io.OutputStream;
 
-import dalvik.system.BaseDexClassLoader;
-
 /**
  * Created by Wohnzimmer on 16.11.2014.
  */
@@ -16,7 +14,11 @@ public class BitmapUtil {
 
     private static Bitmap bitmapFromSD;
 
-    public static boolean takeScreenShot() {
+    public static boolean saveScreenshot(){
+        return saveScreenShot("screen.png");
+    }
+
+    public static boolean saveScreenShot(String filename) {
         Process shell = null;
         try {
             shell = Runtime.getRuntime().exec("su", null, null);
@@ -26,7 +28,7 @@ public class BitmapUtil {
 
         OutputStream os = shell.getOutputStream();
         try {
-            os.write(("/system/bin/screencap -p " + "/sdcard/screen.png").getBytes("ASCII"));
+            os.write(("/system/bin/screencap -p " + "/sdcard/" + filename).getBytes("ASCII"));
             os.flush();
             os.close();
             shell.waitFor();
@@ -40,16 +42,16 @@ public class BitmapUtil {
         return true;
     }
 
-    public static Bitmap getBitmapFromSD() {
+    public static Bitmap getBitmapFromSD(String filename) {
         BitmapFactory.Options options = new BitmapFactory.Options();
         options.inPreferredConfig = Bitmap.Config.ARGB_8888;
-        Bitmap bitmapFromSD = BitmapFactory.decodeFile("/sdcard/screen.png", options);
+        Bitmap bitmapFromSD = BitmapFactory.decodeFile("/sdcard/" + filename, options);
         return bitmapFromSD;
     }
 
-    public static Bitmap getScreenBitmap() {
-        boolean success = takeScreenShot();
-        return getBitmapFromSD();
+    public static Bitmap getScreenAsBitmap() {
+        boolean success = saveScreenshot();
+        return getBitmapFromSD("screen.png");
     }
 
     public static int[] getBitmapPixel(Bitmap b) {
